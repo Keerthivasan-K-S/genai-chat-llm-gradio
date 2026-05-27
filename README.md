@@ -24,9 +24,82 @@ Run the application locally with demo.launch(). Optionally deploy it to the clou
 
 ## PROGRAM:
 ```py
+import gradio as gr
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
+print("Loading FLAN-T5 model...")
+
+tokenizer = AutoTokenizer.from_pretrained(
+    "google/flan-t5-base"
+)
+
+model = AutoModelForSeq2SeqLM.from_pretrained(
+    "google/flan-t5-base"
+)
+
+print("Model loaded successfully!")
+
+def chat(message, history):
+
+    inputs = tokenizer(
+        message,
+        return_tensors="pt"
+    )
+
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=100
+    )
+
+    reply = tokenizer.decode(
+        outputs[0],
+        skip_special_tokens=True
+    )
+
+    history.append(
+        {
+            "role": "user",
+            "content": message
+        }
+    )
+
+    history.append(
+        {
+            "role": "assistant",
+            "content": reply
+        }
+    )
+
+    return "", history
+
+
+with gr.Blocks() as demo:
+
+    gr.Markdown("# 🤖 Chat with LLM")
+
+    chatbot = gr.Chatbot()
+
+    message = gr.Textbox(
+        placeholder="Type your question..."
+    )
+
+    clear = gr.Button("Clear Chat")
+
+    message.submit(
+        chat,
+        [message, chatbot],
+        [message, chatbot]
+    )
+
+    clear.click(
+        lambda: [],
+        outputs=chatbot
+    )
+
+demo.launch()
 ```
 ## OUTPUT:
+<img width="1918" height="928" alt="image" src="https://github.com/user-attachments/assets/0126aa95-c05b-4ee9-be61-1bba38f3572c" />
 
 
 ### RESULT:
